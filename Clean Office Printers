@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#Automatically wipe folders potentially containing data and empty trash can
+
+echo "Check for Close All Apps App"
+closeAllApps="/Library/Close All Apps.app"
+if [[ -d "$closeAllApps" ]]; then
+	echo "App found... skipping..."
+else
+	echo "App now found, downloading..."
+    sudo jamf policy -event closeAllAppsAppDelpoy
+fi
+
+
+echo "Closing all apps."
+open /Library/Close\ All\ Apps.app
+
+echo "Sleep 3"
+sleep 3
+
+
+#Pull username
+usernamepull="$(stat -f%Su /dev/console)"
+
+echo "Empty Downloads Folder"
+sudo rm -R /Users/$usernamepull/Downloads/*
+
+echo "Empty Documents folder"
+sudo rm -R /Users/$usernamepull/Documents/*
+
+echo "Empty Desktop folder"
+sudo rm -R /Users/$usernamepull/Desktop/*
