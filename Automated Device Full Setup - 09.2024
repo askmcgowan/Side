@@ -10,7 +10,6 @@
 #It will then launch jamfhelper with specific images and trigger policies to download and instal: Chrome, Drive, Zoom, Slack, then set several settings including device name and enable file vault
 #At the end it will download macOS (version specific to needs - put in parameters), install the update and reboot
 
-
 # wait until the Self Service process has started
 while [[ "$setupProcess" = "" ]]
 do
@@ -24,14 +23,6 @@ done
 caffeinate -dims &
 
 
-#dialog download
-updatedDialogVersion=2.5.1
-dialog_bin="/usr/local/bin/dialog"
-dialog_download_url="https://github.com/swiftDialog/swiftDialog/releases/download/v2.5.1/dialog-2.5.1-4775.pkg"
-dialogDir='/usr/local/'
-swiftDialogPKG="swiftDialog.pkg"
-    
-    
 #dialog specs
 dialogIconDir="/Library/Application Support/SideIT/ATTIcon.png"
 dialogBackGroundDir="/Library/Application Support/wallpaper/desktopwallpaper.jpg"
@@ -46,7 +37,8 @@ swiftDialogPKG="swiftDialog.pkg"
 
 
 #device specs
-macOSVersion=14.6.1
+macOSVersion="$4"
+macOSName="$5"
 currentOSVersion=$(sw_vers -productVersion)
 macSerial=$(system_profiler SPHardwareDataType | awk '/Serial/ {print $4}')
 
@@ -296,7 +288,7 @@ killall Self\ Service
 
 
 
-#alert to show download & softwareupdate --fetch-full-installer --full-installer-version 14.6.1
+#alert to show download & softwareupdate --fetch-full-installer --full-installer-version $macOSVersion
 installing_macOS_notification () {
     
 dTitle="Installing macOS $macOSVersion... Please wait"
@@ -425,8 +417,7 @@ killall Dialog
 
 ##install
 install_macOS() {
-	#userPass="Pa\$\$w0rd!!"
-	echo $userPass | /Applications/Install\ macOS\ Sonoma.app/Contents/Resources/startosinstall --agreetolicense --nointeraction --user "$currentUser" --stdinpass --rebootdelay 30
+	echo $userPass | /Applications/Install\ macOS\ $macOSName.app/Contents/Resources/startosinstall --agreetolicense --nointeraction --user "$currentUser" --stdinpass --rebootdelay 30
     
     # Capture the PID of the download process
     installPID=$!
