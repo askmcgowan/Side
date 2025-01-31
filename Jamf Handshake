@@ -46,6 +46,7 @@ try
 		do shell script "sudo profiles renew -type enrollment" with administrator privileges
 	else
 		-- Profiles found, run sudo jamf policy
+		display dialog "Profiles found, trying jamf policy." buttons {"OK"} default button "OK" with icon caution
 		try
 			-- Define the full path to the jamf command
 			set jamfPath to "/usr/local/jamf/bin/jamf" -- Replace with the correct path if different
