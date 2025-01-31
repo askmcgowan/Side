@@ -36,8 +36,10 @@ try
 	do shell script "echo ' ' | sudo -S -v" with administrator privileges
 	
 	-- Check for profiles using the `profiles -P` command
-	set profilesOutput to do shell script "profiles -P"
-	if profilesOutput contains "No profiles are installed" then
+	set command to "sudo profiles -P"
+	set profilesOutput to do shell script command with administrator privileges
+	--display dialog profilesOutput -- uncomment this to show true output
+	if profilesOutput contains "There are no configuration profiles installed" then
 		-- No profiles found, display dialog and attempt to enroll
 		display dialog "There are no profiles installed. Enrolling the device..." buttons {"OK"} default button "OK" with icon caution
 		-- Run profiles renew -type enrollment
