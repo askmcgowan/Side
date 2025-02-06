@@ -1,0 +1,76 @@
+## This is a three part script to get specific data into Extention Attributes in Jamf.
+## This use case looks up a specific IP address, and when it is connected to it, it uploads the latest timestamp to the ext attribute.
+
+# Extention Attribute
+# In Jamf, under Computer managment settings, open Extention Attributes and add a new one:
+##### Give it a name - in my case "Office Network", select the gategory under which you want it to be displayed, otherwise select String and Script
+#### The script:
+
+#!/bin/bash
+
+custom_data_file="/Library/Application Support/JAMF/OfficeNetworkCheck.txt"
+
+if [[ -f "$custom_data_file" ]]; then
+  office_network_check=$(cat "$custom_data_file")
+  echo "<result>$office_network_check</result>"
+else
+  echo "<result>No record found</result>"
+fi
+
+## The script above, triggered by an inventory pull, simply pulls the string from the .txt file and displays it in the attribute.
+
+## The main script - I call it "Office Network Detection". It simply checks for the IP address assigned to the device by the router. 
+## If the IP matches the office IP - assigned in $4, the it puts the current date and time stamp in the TXT file. This is the file the attributes pulls from.
+## After the time stamp is put in the TXT file, it runs jamf recon to force the attibute to trigger the script.
+## If the IP address does not match, it does nothing. 
+
+#!/bin/bash
+
+# Define office IPv6 address to check
+office_ip="$4"
+echo "Office IP: $office_ip"
+
+# Get current public IPv6 address
+#IPv6
+#current_ip=$(curl -s -6 ifconfig.me)
+
+#IPv4
+current_ip=$(curl -s -4 ifconfig.me)
+echo "Current IP: $current_ip"
+
+# Get current date and time
+current_date=$(date "+%Y-%m-%d %H:%M")
+echo "Current local date/time: "$current_date
+
+# Define a file path to store the timestamp locally
+custom_data_file="/Library/Application Support/JAMF/OfficeNetworkCheck.txt"
+
+# Check if the current IP matches the office network IP
+if [[ "$current_ip" == "$office_ip" ]]; then
+  echo "Connected to office network. Updating Jamf Pro with timestamp."
+  
+  # Write the current timestamp to a local file
+  echo "$current_date" | sudo tee "$custom_data_file"
+
+  # Trigger a recon to upload the data
+  sudo jamf recon
+else
+  echo "Not connected to the office network. No action taken."
+fi
+
+
+
+### Final piece - the policy that runs the entire thing.
+## Create a policy - in my case "Office Network - Network Changed".
+## Assign the script above - "Office Network Detector" - to the policy.
+## Set the trigger to "network change" and "ongoing" and assign it to all laptops.
+
+## The way it works:
+# On network change, the script is run
+# If the IP is the office, it puts the timestamp in the file
+# Inventory is triggered and the extention attribute pulls the time stamp and displays it
+
+
+## Bonus
+# You are able to create a smart group or report stating that if the extntion attribue is like "date format", it will show you the devices that matched the IP for the day.
+
